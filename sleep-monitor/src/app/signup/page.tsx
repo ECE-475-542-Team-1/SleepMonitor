@@ -1,15 +1,14 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { redirect } from 'next/navigation';
-import SleepInsightsClient from './SleepInsightsClient';
+import SignUpClient from './SignUpClient';
 
-export default async function SleepInsightsPage() {
+export default async function SignInPage() {
   const session = await getServerSession(authOptions);
 
-  if (!session) {
-    redirect('/signin');
+  if (session) {
+    redirect('/dashboard');
   }
 
-  return <SleepInsightsClient />;
+  return <SignUpClient />;
 }
-

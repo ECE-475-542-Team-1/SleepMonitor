@@ -2,10 +2,11 @@ import './globals.css';
 import type { Metadata } from 'next';
 import React from 'react';
 import Sidebar from './components/Sidebar';
+import NextAuthSessionProvider from './providers/SessionProvider';
 
 export const metadata: Metadata = {
-  title: 'My Sleep Tracker',
-  description: 'Track your HR and SpO₂ during sleep.',
+  title: 'Sleep Tracker App',
+  description: 'Track your sleep data',
 };
 
 export default function RootLayout({
@@ -15,16 +16,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="h-screen bg-gray-50 text-gray-900">
-        <div className="flex h-full">
-          {/* Sidebar on the left */}
+      <body>
+      <NextAuthSessionProvider>
+        <div className="flex">
           <Sidebar />
-
-          {/* Main content area */}
-          <main className="flex-1 p-6">
+          <main className="flex-1">
             {children}
           </main>
         </div>
+        </NextAuthSessionProvider>
       </body>
     </html>
   );

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { connectMongo } from '@/app/lib/mongoose';
+import SensorReading from '@/app/models/SensorReadings';
 
 interface SensorData {
   timestamp: number;
@@ -6,7 +8,6 @@ interface SensorData {
   spo2: number;
 }
 
-// Temporary in-memory store for demo
 const sensorDataStore: SensorData[] = [
   { timestamp: 1680730012, hr: 72, spo2: 98 },
   { timestamp: 1680730022, hr: 71, spo2: 97 },
@@ -22,10 +23,29 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  // e.g., body could be { timestamp: 1680730140, hr: 75, spo2: 97 }
-  sensorDataStore.push(body);
+  try {
+    const body = await request.json();
+    console.log('Received from ESP32: ', body);
+    sensorDataStore.push(body);
 
-  return NextResponse.json({ message: 'Data received' });
+    return NextResponse.json({ message: 'Data received' });
+  } catch(err) {
+    console.error('Error parsing data: ', err);
+    return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
+  }
+
+  // try {
+  //   const readings = await request.json();
+  //   // connect to Mongo
+  //   await connectMongo();
+
+  //   await SensorReading.insertMany(readings);
+
+  //   return NextResponse.json({ message: 'Batch inserted' }, { status: 201 });
+  // } catch (error) {
+  //   console.error('Error inserting sensor data:', error);
+  //   return NextResponse.json({ error: 'Failed to insert data' }, { status: 500 });
+  // }
 }
+
 

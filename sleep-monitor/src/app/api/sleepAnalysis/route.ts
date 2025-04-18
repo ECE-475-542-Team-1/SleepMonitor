@@ -3,22 +3,19 @@ import OpenAI from 'openai';
 
 export async function POST(request: Request) {
   try {
-    // 1) Parse the incoming data
     const body = await request.json();
     const { heartRateArray, spo2Array, motionArray } = body;
 
-    // 2) Create an OpenAI client
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY, // set via .env.local
     });
 
-    // 3) Build the prompt
     const prompt = `
     I have these sleep metrics:
     - Heart Rate: ${heartRateArray.join(', ')}
     - SpO2: ${spo2Array.join(', ')}
 
-    Please provide insights and suggestions to improve sleep, in concise bullet points.
+    If the sleep metrics are out of the normal range please provide insights and concrete suggestions to improve sleep, in 3-4 concise sentences. If they are normal, give a congrats in 1-2 concise sentences.
     `;
 
     // 4) Call the chat model (GPT-3.5 or GPT-4)
