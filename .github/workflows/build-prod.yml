@@ -31,7 +31,7 @@ jobs:
       - name: Build and Push Docker Image
         if: contains(steps.commit-message.outputs.message, '[deploy]')
         run: |
-          docker build --build-arg NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL }} \
+          docker build \
             -t bach2690/sleep-monitor:${{ github.sha }} \
             -f sleep-monitor/Dockerfile ./sleep-monitor
           docker push bach2690/sleep-monitor:${{ github.sha }}
@@ -49,7 +49,7 @@ jobs:
           kubectl --insecure-skip-tls-verify=true --kubeconfig=$HOME/kubeconfig create secret generic sleep-monitor-secrets \
             --from-literal=MONGO_URI="${{ secrets.MONGO_URI }}" \
             --from-literal=NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
-            --from-literal=NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
+            --from-literal=NEXTAUTH_URL="http://sleepmonitoring:32000" \
             --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
             --from-literal=ESP32_API_KEY="${{ secrets.ESP32_API_KEY}}"
 
