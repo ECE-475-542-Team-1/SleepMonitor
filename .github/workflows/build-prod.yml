@@ -43,8 +43,8 @@ jobs:
       - name: Create K8s secret
         if: contains(steps.commit-message.outputs.message, '[deploy]')
         run: |
-          kubectl --kubeconfig=$HOME/kubeconfig delete secret sleep-monitor-secrets --ignore-not-found
-          kubectl --kubeconfig=$HOME/kubeconfig create secret generic sleep-monitor-secrets \
+          kubectl --insecure-skip-tls-verify=true --kubeconfig=$HOME/kubeconfig delete secret sleep-monitor-secrets --ignore-not-found
+          kubectl --insecure-skip-tls-verify=true --kubeconfig=$HOME/kubeconfig create secret generic sleep-monitor-secrets \
             --from-literal=MONGO_URI="${{ secrets.MONGO_URI }}" \
             --from-literal=NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
             --from-literal=NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
@@ -54,5 +54,5 @@ jobs:
       - name: Update Kubernetes Deployment with New Image
         if: contains(steps.commit-message.outputs.message, '[deploy]')
         run: |
-          kubectl --kubeconfig=$HOME/kubeconfig set image deployment/sleep-monitor-deployment sleep-monitor=bach2690/sleep-monitor:${{ github.sha }} -n default
+          kubectl --insecure-skip-tls-verify=true --kubeconfig=$HOME/kubeconfig set image deployment/sleep-monitor-deployment sleep-monitor=bach2690/sleep-monitor:${{ github.sha }} -n default
 
