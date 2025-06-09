@@ -19,7 +19,10 @@ spec:
             - containerPort: 3000
           env:
             - name: NEXTAUTH_URL
-              value: "http://44.249.53.169"
+              valueFrom:
+                secretKeyRef:
+                  name: sleep-monitor-secrets
+                  key: NEXTAUTH_URL
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:

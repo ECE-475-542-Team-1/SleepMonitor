@@ -1,14 +1,28 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Sparkles, Brain, Info, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Brain, Info, AlertTriangle } from 'lucide-react';
 
 export default function SleepInsightsClient() {
   const [insights, setInsights] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [heartRateArray, setHeartRateArray] = useState<number[]>([]);
+  const [spo2Array, setSpo2Array] = useState<number[]>([]);
 
-  const heartRateArray = [72, 75, 78, 68, 65];
-  const spo2Array = [98, 97, 97, 96, 95];
+  useEffect(() => {
+    const fetchAverages = async () => {
+      try {
+        const res = await fetch('/api/averages');
+        const data = await res.json();
+        setHeartRateArray(data.heartRateArray || []);
+        setSpo2Array(data.spo2Array || []);
+      } catch (err) {
+        console.error('Failed to fetch average data:', err);
+      }
+    };
+
+    fetchAverages();
+  }, []);
 
   const avg = (arr: number[]) =>
     arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0;
@@ -18,11 +32,11 @@ export default function SleepInsightsClient() {
 
   const logicalInsights = [
     avgHR > 75
-      ? 'Your average heart rate is slightly elevated during sleep, which may suggest restlessness or stress.'
-      : 'Your heart rate is within a healthy resting range — good sign of restful sleep.',
+      ? 'Your average heart rate is slightly elevated during sleep, which may suggest restlessness, stress, or lack of deep sleep.'
+      : 'Your heart rate is within a healthy resting range — a good indicator of restful sleep.',
     avgSpO2 < 95
-      ? 'Average SpO₂ is below optimal levels. Consider checking for potential breathing disruptions.'
-      : 'SpO₂ levels are consistently strong — good oxygenation during sleep.',
+      ? 'Your average SpO₂ is below the optimal level, which may indicate potential breathing disruptions such as mild apnea.'
+      : 'Your SpO₂ levels are consistently strong — excellent oxygenation during sleep.',
   ];
 
   const handleAnalyze = async () => {
@@ -36,7 +50,6 @@ export default function SleepInsightsClient() {
         body: JSON.stringify({ heartRateArray, spo2Array }),
       });
       const json = await response.json();
-
       setInsights(json.insights || 'No AI insights available.');
     } catch (err) {
       console.error('Failed to fetch AI insights:', err);
@@ -76,23 +89,30 @@ export default function SleepInsightsClient() {
             insights ? (
               <div className="space-y-4 text-slate-300">
                 {insights.split('\n').map((line, i) => {
-                  if (line.trim().startsWith('-')) {
+                  const trimmed = line.trim();
+
+                  if (trimmed.startsWith('-')) {
+                    const text = trimmed.replace(/^-+\s*/, '');
                     return (
                       <li key={i} className="ml-4 list-disc marker:text-indigo-400 leading-relaxed">
-                        {line.replace(/^-\s*/, '')}
+                        <MarkdownText text={text} />
                       </li>
                     );
                   }
 
-                  if (line.trim().startsWith('**') && line.trim().endsWith('**')) {
+                  if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
                     return (
                       <h3 key={i} className="text-lg font-semibold text-indigo-300 mt-4">
-                        {line.replace(/\*\*/g, '')}
+                        {trimmed.replace(/\*\*/g, '')}
                       </h3>
                     );
                   }
 
-                  return <p key={i} className="leading-relaxed">{line}</p>;
+                  return (
+                    <p key={i} className="leading-relaxed">
+                      <MarkdownText text={trimmed} />
+                    </p>
+                  );
                 })}
               </div>
             ) : (
@@ -116,9 +136,9 @@ export default function SleepInsightsClient() {
             icon={<AlertTriangle className="text-yellow-400" size={20} />}
             color="bg-yellow-900/20 backdrop-blur border border-yellow-600/30"
             content={[
-              avgHR > 75 && 'Try reducing screen time or caffeine intake before bed.',
+              avgHR > 75 && 'Try reducing screen time, stress, or caffeine intake before bed.',
               avgSpO2 < 95 &&
-                'Ensure your sleeping environment has good airflow and consider evaluating for snoring or sleep apnea symptoms.',
+                'Ensure good airflow in your sleeping environment and consider evaluating for snoring or sleep apnea.',
             ].filter(Boolean)}
           />
         )}
@@ -166,7 +186,7 @@ function InsightCard({
         {Array.isArray(content)
           ? content.map((line, i) => (
               <p key={i} className="text-slate-300 leading-relaxed">
-                • {line}
+                • <MarkdownText text={line} />
               </p>
             ))
           : content}
@@ -175,5 +195,25 @@ function InsightCard({
     </section>
   );
 }
+
+function MarkdownText({ text }: { text: string }) {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return (
+    <>
+      {parts.map((part, i) =>
+        part.startsWith('**') && part.endsWith('**') ? (
+          <strong key={i} className="font-semibold text-slate-100">
+            {part.slice(2, -2)}
+          </strong>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  );
+}
+
+
+
 
 

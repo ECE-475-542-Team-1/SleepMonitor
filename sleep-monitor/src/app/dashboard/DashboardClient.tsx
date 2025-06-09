@@ -97,6 +97,7 @@ export default function DashboardClient() {
     });
   };
 
+// Fetch data from /api/data
   useEffect(() => {
     if (paused) return;
 
@@ -104,7 +105,6 @@ export default function DashboardClient() {
       try {
         const res = await fetch('/api/data');
         const data = await res.json();
-        console.log(data);
         data.sort((a: SensorData, b: SensorData) => a.timestamp - b.timestamp);
         setSensorData(data);
         setLastUpdated(Date.now());
@@ -113,15 +113,13 @@ export default function DashboardClient() {
       }
     };
 
-    const setActiveUser = async () => {
-      await fetch('/api/active-user', { method: 'POST' });
-    };
-    setActiveUser();
-
     fetchData();
+
     const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
   }, [paused]);
+
+
 
   const handleDeleteLatest = async () => {
     const confirmed = confirm('Delete the most recent reading?');
@@ -143,6 +141,7 @@ export default function DashboardClient() {
 
   const now = Math.floor(Date.now() / 1000);
   let filteredData = [...sensorData];
+  
 
   if (filter === '24h') {
     filteredData = sensorData.filter(d => now - d.timestamp <= 86400);
@@ -154,6 +153,11 @@ export default function DashboardClient() {
 
   const sessions = groupSleepSessions(filteredData);
   const activeSession = sessions[sessionIndex] ?? null;
+  useEffect(() => {
+    if (sessions.length > 0 && sessionIndex === 0) {
+      setSessionIndex(sessions.length - 1);
+    }
+  }, [sessions]);
 
   const groupedByTimestamp: Record<number, SensorData[]> = {};
   for (const d of activeSession?.data ?? []) {
@@ -178,6 +182,10 @@ export default function DashboardClient() {
       };
     })
     .sort((a, b) => a.timestamp - b.timestamp);
+
+  console.log('Session data length:', activeSession?.data.length);
+  console.log('Session range:', activeSession?.data.at(0)?.timestamp, 'to', activeSession?.data.at(-1)?.timestamp);
+
 
   const baselineHR = Math.max(...sortedData.map(d => d.hr));
   const baselineRR = Math.max(...sortedData.map(d => d.respiratoryRate));
@@ -312,14 +320,12 @@ export default function DashboardClient() {
           getStageColor(inferSleepStage(d.hr, d.respiratoryRate, baselineHR, baselineRR))
         ),
         borderWidth: 0,
-        pointRadius: 3,
+        pointRadius: 5,
         showLine: false,
         fill: false,
-        parsing: false,
       } satisfies ChartDataset<'line', { x: Date; y: number }[]>,
     ],
   };
-
 
   const stageChartOptions: ChartOptions<'line'> = {
     ...chartOptions,
@@ -416,21 +422,6 @@ export default function DashboardClient() {
                   <option value="7d">Last 7d</option>
                   <option value="30d">Last 30d</option>
                 </select>
-
-                <button
-                  onClick={() => sessionScrollRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
-                  className="rounded bg-slate-700 px-2 py-1 hover:bg-slate-600"
-                  aria-label="Scroll Left"
-                >
-                  ◀
-                </button>
-                <button
-                  onClick={() => sessionScrollRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
-                  className="rounded bg-slate-700 px-2 py-1 hover:bg-slate-600"
-                  aria-label="Scroll Right"
-                >
-                  ▶
-                </button>
               </div>
             </div>
 
