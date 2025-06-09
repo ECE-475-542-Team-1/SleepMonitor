@@ -48,7 +48,8 @@ jobs:
             --from-literal=MONGO_URI="${{ secrets.MONGO_URI }}" \
             --from-literal=NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
             --from-literal=NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
-            --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+            --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+            --from-literal=ESP32_API_KEY="${{ secrets.ESP32_API_KEY}}"
 
       - name: Update Kubernetes Deployment with New Image
         if: contains(steps.commit-message.outputs.message, '[deploy]')
