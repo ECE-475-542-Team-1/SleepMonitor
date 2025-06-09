@@ -41,7 +41,7 @@ export default async function LandingPage() {
         </h1>
         <p className="mt-5 max-w-2xl text-lg text-slate-600">
           SleepTracker pairs a lightweight wearable with real‑time analytics to
-          highlight heart‑rate variability, SpO2 drops, respiratory rate, and micro‑movements.
+          highlight heart‑rate variability, SpO2 drops, and respiratory rate.
         </p>
 
         <Link

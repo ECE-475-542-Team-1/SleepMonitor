@@ -16,6 +16,6 @@ RUN NEXT_DISABLE_ESLINT=1 npm run build
 
 # Expose port
 EXPOSE 3000
-
+ENV HOST 0.0.0.0
 # Start the app
 CMD ["npm", "start"]

@@ -10,6 +10,7 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Sleep Insights', href: '/sleep-insights' },
   { name: 'Account', href: '/account' },
+  { name: 'Register Device', href: '/devices/register' },
 ];
 
 export default function Sidebar() {
