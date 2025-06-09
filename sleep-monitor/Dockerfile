@@ -12,9 +12,6 @@ RUN npm install
 COPY . .
 
 # Build Next.js for production
-ARG NEXTAUTH_URL
-ENV NEXTAUTH_URL=$NEXTAUTH_URL
-
 RUN NEXT_DISABLE_ESLINT=1 npm run build
 
 # Expose port
