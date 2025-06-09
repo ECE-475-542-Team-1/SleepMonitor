@@ -16,7 +16,6 @@ RUN NEXT_DISABLE_ESLINT=1 npm run build
 
 # Expose port
 EXPOSE 3000
-ARG NEXTAUTH_URL
-ENV NEXTAUTH_URL=$NEXTAUTH_URL
+ENV HOST 0.0.0.0
 # Start the app
 CMD ["npm", "start"]
