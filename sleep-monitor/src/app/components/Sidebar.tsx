@@ -20,7 +20,7 @@ export default function Sidebar() {
 
   return (
     <aside className="flex min-h-screen w-64 flex-col bg-sky-900 p-4 shadow" id="my-nav-bar">
-      <div className="mb-6 flex items-center">
+      <div className="mb-6 flex items-center"> 
         <svg
           width="24"
           height="24"
