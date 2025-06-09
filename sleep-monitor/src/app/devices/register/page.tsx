@@ -45,7 +45,7 @@ export default function RegisterDevicePage() {
           <div className="space-y-4">
             <input
               type="text"
-              placeholder="e.g. Bedroom ESP32"
+              placeholder="e.g. MyNewESP32"
               className="w-full rounded-md border border-slate-600 bg-slate-900 px-4 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-600"
               value={deviceName}
               onChange={(e) => setDeviceName(e.target.value)}
