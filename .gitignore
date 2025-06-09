@@ -2,3 +2,6 @@
 /sleep-monitor/node_modules
 /sleep-monitor/.next
 /sleep-monitor/sm1.pem
+
+/sleep-monitor/k8s/cluster-issuer.yaml
+/sleep-monitor/k8s/ingress.yaml
