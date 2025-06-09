@@ -31,7 +31,7 @@ jobs:
       - name: Build and Push Docker Image
         if: contains(steps.commit-message.outputs.message, '[deploy]')
         run: |
-          docker build -t bach2690/sleep-monitor:${{ github.sha }} -f Dockerfile .
+          docker build -t bach2690/sleep-monitor:${{ github.sha }} -f sleep-monitor/Dockerfile ./sleep-monitor
           docker push bach2690/sleep-monitor:${{ github.sha }}
 
       - name: Set up Kubeconfig
