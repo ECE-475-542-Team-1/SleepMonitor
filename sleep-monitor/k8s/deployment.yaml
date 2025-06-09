@@ -38,11 +38,6 @@ spec:
                 secretKeyRef:
                   name: sleep-monitor-secrets
                   key: OPENAI_API_KEY
-            - name: ESP32_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: sleep-monitor-secrets
-                  key: ESP32_API_KEY
 
 
 
