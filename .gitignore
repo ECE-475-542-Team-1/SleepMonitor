@@ -1,1 +1,4 @@
-sleep-monitor/.env
+/sleep-monitor/.env
+/sleep-monitor/node_modules
+/sleep-monitor/.next
+/sleep-monitor/sm1.pem

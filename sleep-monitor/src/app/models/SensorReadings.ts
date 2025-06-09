@@ -6,6 +6,8 @@ const SensorReadingSchema = new mongoose.Schema({
   timestamp: Number, // or Date
   hr: Number,
   spo2: Number,
+  respiratoryRate: Number,
+  movementRate: Number,
   createdAt: { type: Date, default: Date.now },
 });
 

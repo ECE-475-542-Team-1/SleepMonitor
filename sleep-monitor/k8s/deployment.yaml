@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sleep-monitor-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sleep-monitor
+  template:
+    metadata:
+      labels:
+        app: sleep-monitor
+    spec:
+      containers:
+        - name: sleep-monitor
+          image: bach2690/sleep-monitor:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NEXTAUTH_URL
+              value: "http://44.249.53.169"
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: sleep-monitor-secrets
+                  key: MONGO_URI
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: sleep-monitor-secrets
+                  key: NEXTAUTH_SECRET
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sleep-monitor-secrets
+                  key: OPENAI_API_KEY
+            - name: ESP32_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: sleep-monitor-secrets
+                  key: ESP32_API_KEY
+
+
+
+              

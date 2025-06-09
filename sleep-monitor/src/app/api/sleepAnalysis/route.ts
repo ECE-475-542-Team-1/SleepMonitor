@@ -7,26 +7,41 @@ export async function POST(request: Request) {
     const { heartRateArray, spo2Array, motionArray } = body;
 
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY, // set via .env.local
+      apiKey: process.env.OPENAI_API_KEY,
     });
+
+    const avg = (arr: number[]) =>
+      arr && arr.length > 0 ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null;
+
+    const avgHR = avg(heartRateArray);
+    const avgSpO2 = avg(spo2Array);
 
     const prompt = `
-    I have these sleep metrics:
-    - Heart Rate: ${heartRateArray.join(', ')}
-    - SpO2: ${spo2Array.join(', ')}
+You are a sleep health assistant helping users understand the quality of their sleep based on sensor data.
 
-    If the sleep metrics are out of the normal range please provide insights and concrete suggestions to improve sleep, in 3-4 concise sentences. If they are normal, give a congrats in 1-2 concise sentences.
-    `;
+Here is the user's recent average sleep data:
+- Heart Rate readings: [${heartRateArray.join(', ')}] (average: ${avgHR ?? 'N/A'} bpm)
+- SpO₂ readings: [${spo2Array.join(', ')}] (average: ${avgSpO2 ?? 'N/A'}%)
 
-    // 4) Call the chat model (GPT-3.5 or GPT-4)
+Instructions:
+1. If values suggest **possible concern** (e.g., HR > 75 bpm, SpO₂ < 95%), provide:
+   - 3–4 short sentences summarizing the issue in plain language
+   - 3–5 **concise, evidence-based suggestions** for improvement (bulleted)
+2. If all values are **within healthy range**, respond with:
+   - 2–3 friendly sentences congratulating them
+   - 1–2 tips to maintain good sleep quality
+3. Avoid fluff. Use a confident, helpful tone. Never speculate beyond the data provided.
+
+Begin with a short bold heading (like "Sleep Analysis" or "Summary").
+`;
+
     const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',    // or 'gpt-4'
+      model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 300,
+      temperature: 0.6,
+      max_tokens: 400,
     });
 
-    // 5) Extract the AI's response
     const aiResponse = completion.choices[0]?.message?.content || '';
 
     return NextResponse.json({ insights: aiResponse });
@@ -38,4 +53,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
 

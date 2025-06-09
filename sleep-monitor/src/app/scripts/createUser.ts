@@ -2,8 +2,8 @@
 import 'dotenv/config';        // loads .env
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import User from '@/models/User';
-import { connectMongo } from '@/lib/mongoose';
+import User from '../models/Users';
+import { connectMongo } from '../lib/mongoose';
 
 async function createUser(email: string, plainPassword: string, name = '') {
   try {

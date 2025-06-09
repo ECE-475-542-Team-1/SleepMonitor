@@ -1,0 +1,58 @@
+name: Deploy to Kubernetes
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get last commit message
+        id: commit-message
+        run: echo "message=$(git log -1 --pretty=%B)" >> $GITHUB_OUTPUT
+
+      - name: Check commit message for deploy trigger
+        if: contains(steps.commit-message.outputs.message, '[deploy]')
+        run: echo "✅ Deploying because commit message contains [deploy]"
+
+      - name: Log in to Docker Hub
+        if: contains(steps.commit-message.outputs.message, '[deploy]')
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Docker Image
+        if: contains(steps.commit-message.outputs.message, '[deploy]')
+        run: |
+          docker build -t bach2690/sleep-monitor:${{ github.sha }} -f Dockerfile .
+          docker push bach2690/sleep-monitor:${{ github.sha }}
+
+      - name: Set up Kubeconfig
+        if: contains(steps.commit-message.outputs.message, '[deploy]')
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/kubeconfig
+          echo "KUBECONFIG=$HOME/kubeconfig" >> $GITHUB_ENV
+
+      - name: Create K8s secret
+        if: contains(steps.commit-message.outputs.message, '[deploy]')
+        run: |
+          kubectl --kubeconfig=$HOME/kubeconfig delete secret sleep-monitor-secrets --ignore-not-found
+          kubectl --kubeconfig=$HOME/kubeconfig create secret generic sleep-monitor-secrets \
+            --from-literal=MONGO_URI="${{ secrets.MONGO_URI }}" \
+            --from-literal=NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
+            --from-literal=NEXTAUTH_URL="${{ secrets.NEXTAUTH_URL }}" \
+            --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
+            --from-literal=ESP32_API_KEY="${{ secrets.ESP32_API_KEY}}"
+
+      - name: Update Kubernetes Deployment with New Image
+        if: contains(steps.commit-message.outputs.message, '[deploy]')
+        run: |
+          kubectl --kubeconfig=$HOME/kubeconfig set image deployment/sleep-monitor-deployment sleep-monitor=bach2690/sleep-monitor:${{ github.sha }} -n default
+

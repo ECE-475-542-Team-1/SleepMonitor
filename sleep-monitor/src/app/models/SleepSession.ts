@@ -7,6 +7,8 @@ const SleepSessionSchema = new mongoose.Schema({
   avgHeartRate: Number,
   avgSpo2: Number,
   sleepQualityScore: Number,
+  respiratoryRate: Number,
+  movementRate: Number,
   createdAt: { type: Date, default: Date.now },
 });
 

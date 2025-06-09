@@ -3,14 +3,14 @@ import { NextResponse } from 'next/server';
 import { connectMongo } from '@/app/lib/mongoose';
 import User from '@/app/models/Users';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '../../lib/authOptions';
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   await connectMongo();
-  const user = await User.findById(session.user!.id).lean();
+  const user = await User.findById(session.user!._id).lean();
   if (!user) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const { name, email, height, weight, age, profilePic } = user as any;
@@ -24,7 +24,7 @@ export async function PATCH(request: Request) {
   const updates = await request.json();
   await connectMongo();
   const user = await User.findByIdAndUpdate(
-    session.user!.id,
+    session.user!._id,
     { $set: updates },
     { new: true }
   ).lean();
