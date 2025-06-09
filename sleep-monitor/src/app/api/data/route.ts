@@ -3,8 +3,8 @@ import { connectMongo } from '@/app/lib/mongoose';
 import { getToken } from 'next-auth/jwt';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../lib/authOptions';
-import { getActiveUser } from '../../lib/activeUserStore';
 import SensorReading from '@/app/models/SensorReadings';
+import Device from '@/app/models/Device';
 
 export async function GET(req: NextRequest) {
   await connectMongo();
@@ -23,8 +23,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(readings);
 }
 
-
-// DELETE latest reading
 export async function DELETE(request: NextRequest) {
   await connectMongo();
 
@@ -54,8 +52,7 @@ export async function DELETE(request: NextRequest) {
     });
   }
 
-  const latest = await SensorReading.findOne({ userId: session.user._id })
-  .sort({ timestamp: -1 });
+  const latest = await SensorReading.findOne({ userId: session.user._id }).sort({ timestamp: -1 });
 
   if (!latest) {
     return NextResponse.json({ error: 'No data to delete' }, { status: 404 });
@@ -65,26 +62,21 @@ export async function DELETE(request: NextRequest) {
   return NextResponse.json({ message: 'Deleted most recent reading' });
 }
 
-
 export async function POST(request: NextRequest) {
   try {
     await connectMongo();
 
     const apiKey = request.headers.get('x-api-key');
-    const isFromESP32 = apiKey === process.env.ESP32_API_KEY;
-
     let userId: string | undefined;
 
-    if (isFromESP32) {
-      // Get currently logged in user — for PoC, this works if only one user is ever active
-      const activeUserId = getActiveUser();
-      if (!activeUserId) {
-        return NextResponse.json({ error: 'No active user' }, { status: 401 });
+    if (apiKey) {
+      const device = await Device.findOne({ apiKey });
+      if (!device) {
+        return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
       }
-      userId = activeUserId;
+      userId = device.userId.toString();
     } else {
       const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-      console.log('Decoded token:', token);
       if (!token || !token.sub) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
@@ -95,7 +87,7 @@ export async function POST(request: NextRequest) {
     const serverTimestamp = Math.floor(Date.now() / 1000);
 
     if (Array.isArray(body)) {
-      const sorted = [...body].sort((a, b) => a.timestamp - b.timestamp); // ESP32-relative
+      const sorted = [...body].sort((a, b) => a.timestamp - b.timestamp);
       const batch = sorted.map((entry) => ({
         hr: entry.hr,
         spo2: entry.spo2,
@@ -122,6 +114,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
   }
 }
+
 
 
 
