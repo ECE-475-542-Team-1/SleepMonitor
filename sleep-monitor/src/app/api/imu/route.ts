@@ -30,32 +30,35 @@ export async function POST(request: NextRequest) {
     const serverTimestamp = Math.floor(Date.now() / 1000);
     console.log('Received IMU data:', body);
 
+    const createEntry = (entry: any, offsetTimestamp = 0) => {
+      const data: any = { userId, timestamp: serverTimestamp - offsetTimestamp };
+      if ('respiratoryRate' in entry && typeof entry.respiratoryRate === 'number') {
+        data.respiratoryRate = entry.respiratoryRate;
+      }
+      return data;
+    };
+
     if (Array.isArray(body)) {
       const sorted = [...body].sort((a, b) => a.timestamp - b.timestamp);
-      const batch = sorted.map((entry) => ({
-        userId,
-        respiratoryRate: entry.respiratoryRate,
-        timestamp: serverTimestamp - (sorted[sorted.length - 1].timestamp - entry.timestamp),
-      }));
+      const latestTimestamp = sorted[sorted.length - 1].timestamp;
+      const batch = sorted.map((entry) =>
+        createEntry(entry, latestTimestamp - entry.timestamp)
+      );
 
       await SensorReading.insertMany(batch);
       return NextResponse.json({ message: `Saved ${batch.length} IMU readings` });
     }
 
-    const data = {
-      userId,
-      respiratoryRate: body.respiratoryRate,
-      timestamp: serverTimestamp - body.timestamp,
-    };
+    const data = createEntry(body, body.timestamp ?? 0);
 
     await SensorReading.create(data);
     return NextResponse.json({ message: 'IMU data saved' });
-
   } catch (err) {
     console.error('IMU POST error:', err);
     return NextResponse.json({ error: 'Invalid IMU data' }, { status: 400 });
   }
 }
+
 
 export async function GET(req: NextRequest) {
   await connectMongo();

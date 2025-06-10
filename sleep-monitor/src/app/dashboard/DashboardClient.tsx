@@ -34,22 +34,22 @@ ChartJS.register(
   Legend
 );
 
-interface SensorData {
+export interface SensorData {
   timestamp: number;
-  hr: number;
-  spo2: number;
-  respiratoryRate: number;
-  movementRate: number;
+  hr: number | null;
+  spo2: number | null;
+  respiratoryRate: number | null;
+  movementRate: number | null;
 }
 
 interface SleepSession {
   start: number;
   end: number;
   data: SensorData[];
-  avgRR: number;
-  avgMvmnt: number;
-  avgHR: number;
-  avgSpO2: number;
+  avgHR: number | null;
+  avgSpO2: number | null;
+  avgRR: number | null;
+  avgMvmnt: number | null;
 }
 
 interface UserStats {
@@ -222,28 +222,32 @@ export default function DashboardClient() {
     groupedByTimestamp[d.timestamp].push(d);
   }
 
+
   const sortedData: SensorData[] = Object.entries(groupedByTimestamp)
     .map(([timestampStr, entries]) => {
       const timestamp = parseInt(timestampStr, 10);
-      const avg = (key: keyof SensorData) =>
-        Math.round(entries.reduce((sum, d) => sum + (d[key] ?? 0), 0) / entries.length);
+
+      const avgIfPresent = (key: keyof SensorData) => {
+        const validEntries = entries.filter(d => d[key] != null && d[key] !== 0);
+        if (validEntries.length === 0) return null;
+        return Math.round(
+          validEntries.reduce((sum, d) => sum + (d[key] as number), 0) / validEntries.length
+        );
+      };
 
       return {
         timestamp,
-        hr: avg('hr'),
-        spo2: avg('spo2'),
-        respiratoryRate: avg('respiratoryRate'),
-        movementRate: avg('movementRate'),
+        hr: avgIfPresent('hr'),
+        spo2: avgIfPresent('spo2'),
+        respiratoryRate: avgIfPresent('respiratoryRate'),
+        movementRate: avgIfPresent('movementRate'),
       };
     })
     .sort((a, b) => a.timestamp - b.timestamp);
 
+
   console.log('Session data length:', activeSession?.data.length);
   console.log('Session range:', activeSession?.data.at(0)?.timestamp, 'to', activeSession?.data.at(-1)?.timestamp);
-
-
-  const baselineHR = Math.max(...sortedData.map(d => d.hr));
-  const baselineRR = Math.max(...sortedData.map(d => d.respiratoryRate));
 
   const hrSpo2Data = {
     labels: sortedData.map(d => new Date(d.timestamp * 1000)),
@@ -252,6 +256,7 @@ export default function DashboardClient() {
         label: 'Heart Rate (bpm)',
         data: sortedData.map(d => ({ x: new Date(d.timestamp * 1000), y: d.hr })),
         borderColor: '#ef4444',
+        spanGaps: true,
         pointRadius: 0,
         borderWidth: 2,
         tension: 0.7,
@@ -260,6 +265,7 @@ export default function DashboardClient() {
         label: 'SpO₂ (%)',
         data: sortedData.map(d => ({ x: new Date(d.timestamp * 1000), y: d.spo2 })),
         borderColor: '#3b82f6',
+        spanGaps: true,
         pointRadius: 0,
         borderWidth: 2,
         tension: 0.7,
@@ -391,10 +397,20 @@ export default function DashboardClient() {
           type: 'line',
           label: 'Inferred Sleep Stage',
           data: sortedData.map(d => {
+            const { hr, respiratoryRate, spo2 } = d;
+            const isValid = (v: number | null | undefined) => typeof v === 'number' && v > 0 && !isNaN(v);
+
+            if (!isValid(hr) || !isValid(respiratoryRate)) {
+              return {
+                x: new Date(d.timestamp * 1000),
+                y: sleepStageMap['unknown'], // You can also choose to `return null` and filter later
+              };
+            }
+
             const stage = inferSleepStage(
-              d.hr,
-              d.respiratoryRate,
-              d.spo2 ?? spo2Baseline, // fallback if d.spo2 is missing
+              hr!,
+              respiratoryRate!,
+              isValid(spo2) ? spo2! : userStats.spo2Baseline,
               userStats.hrBaseline,
               userStats.rrBaseline,
               userStats.spo2Baseline,
@@ -402,16 +418,23 @@ export default function DashboardClient() {
               userStats.rrStd,
               userStats.spo2Std
             );
+
             return {
               x: new Date(d.timestamp * 1000),
               y: sleepStageMap[stage],
             };
           }),
+
           backgroundColor: sortedData.map(d => {
+            const { hr, respiratoryRate, spo2 } = d;
+            const isValid = (v: number | null | undefined) => typeof v === 'number' && v > 0 && !isNaN(v);
+
+            if (!isValid(hr) || !isValid(respiratoryRate)) return getStageColor('unknown');
+
             const stage = inferSleepStage(
-              d.hr,
-              d.respiratoryRate,
-              d.spo2 ?? spo2Baseline,
+              hr!,
+              respiratoryRate!,
+              isValid(spo2) ? spo2! : userStats.spo2Baseline,
               userStats.hrBaseline,
               userStats.rrBaseline,
               userStats.spo2Baseline,
@@ -421,6 +444,7 @@ export default function DashboardClient() {
             );
             return getStageColor(stage);
           }),
+
           borderWidth: 0,
           pointRadius: 5,
           showLine: false,
@@ -498,10 +522,10 @@ export default function DashboardClient() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          <SummaryCard title="Avg HR" value={activeSession ? activeSession.avgHR : '--'} unit="bpm" />
-          <SummaryCard title="Avg SpO₂" value={activeSession ? activeSession.avgSpO2 : '--'} unit="%" />
-          <SummaryCard title="Avg Resp Rate" value={activeSession ? activeSession.avgRR : '--'} unit="brpm" />
-          <SummaryCard title="Data Points" value={activeSession ? activeSession.data.length : '--'} unit="" />
+          <SummaryCard title="Avg HR" value={activeSession?.avgHR ?? '--'} unit="bpm" />
+          <SummaryCard title="Avg SpO₂" value={activeSession?.avgSpO2 ?? '--'} unit="%" />
+          <SummaryCard title="Avg Resp Rate" value={activeSession?.avgRR ?? '--'} unit="brpm" />
+          <SummaryCard title="Data Points" value={activeSession?.data.length ?? '--'} unit="" />
         </div>
 
         <div className="mt-3 space-y-2">
@@ -658,13 +682,24 @@ function groupSleepSessions(sensorData: SensorData[]): SleepSession[] {
 function createSession(data: SensorData[]): SleepSession {
   const start = data[0].timestamp;
   const end = data[data.length - 1].timestamp;
-  const avg = (values: number[]) => values.length > 0 ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0;
+
+  const valid = (v: number | null | undefined) => typeof v === 'number' && v > 0 && !isNaN(v);
+
+  const avg = (values: (number | null | undefined)[]) => {
+    const filtered = values.filter(valid) as number[];
+    return filtered.length > 0
+      ? Math.round(filtered.reduce((a, b) => a + b, 0) / filtered.length)
+      : null; // or 0 if you prefer default fallback
+  };
+
   const avgHR = avg(data.map(d => d.hr));
   const avgSpO2 = avg(data.map(d => d.spo2));
-  const avgRR = avg(data.map(d => d.respiratoryRate ?? 0));
-  const avgMvmnt = avg(data.map(d => d.movementRate ?? 0));
+  const avgRR = avg(data.map(d => d.respiratoryRate));
+  const avgMvmnt = avg(data.map(d => d.movementRate));
+
   return { start, end, data, avgHR, avgSpO2, avgRR, avgMvmnt };
 }
+
 
 function SummaryCard({ title, value, unit }: { title: string; value: number | string; unit: string }) {
   return (

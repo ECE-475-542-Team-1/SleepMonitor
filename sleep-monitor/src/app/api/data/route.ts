@@ -86,25 +86,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const serverTimestamp = Math.floor(Date.now() / 1000);
 
+    const createEntry = (entry: any, offsetTimestamp = 0) => {
+      const data: any = { userId, timestamp: serverTimestamp - offsetTimestamp };
+      if ('hr' in entry && typeof entry.hr === 'number') data.hr = entry.hr;
+      if ('spo2' in entry && typeof entry.spo2 === 'number') data.spo2 = entry.spo2;
+      return data;
+    };
+
     if (Array.isArray(body)) {
       const sorted = [...body].sort((a, b) => a.timestamp - b.timestamp);
-      const batch = sorted.map((entry) => ({
-        hr: entry.hr,
-        spo2: entry.spo2,
-        userId,
-        timestamp: serverTimestamp - (sorted[sorted.length - 1].timestamp - entry.timestamp),
-      }));
+      const latestTimestamp = sorted[sorted.length - 1].timestamp;
+      const batch = sorted.map((entry) =>
+        createEntry(entry, latestTimestamp - entry.timestamp)
+      );
 
       await SensorReading.insertMany(batch);
       return NextResponse.json({ message: `Saved ${batch.length} readings` });
     }
 
-    const data = {
-      userId,
-      hr: body.hr,
-      spo2: body.spo2,
-      timestamp: serverTimestamp,
-    };
+    const data = createEntry(body);
 
     await SensorReading.create(data);
 
@@ -114,6 +114,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid data' }, { status: 400 });
   }
 }
+
 
 
 

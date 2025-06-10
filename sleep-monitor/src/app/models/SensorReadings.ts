@@ -4,10 +4,10 @@ const SensorReadingSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   sessionId: { type: mongoose.Schema.Types.ObjectId, ref: 'SleepSession' },
   timestamp: Number, // or Date
-  hr: Number,
-  spo2: Number,
-  respiratoryRate: Number,
-  movementRate: Number,
+  hr: { type: Number, required: false },
+  spo2: { type: Number, required: false },
+  respiratoryRate: { type: Number, required: false },
+  movementRate: { type: Number, required: false },
   createdAt: { type: Date, default: Date.now },
 });
 

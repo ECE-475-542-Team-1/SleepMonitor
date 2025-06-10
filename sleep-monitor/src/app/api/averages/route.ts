@@ -7,7 +7,7 @@ export async function GET() {
     await connectMongo();
     const raw = await SensorData.find({}).sort({ timestamp: 1 }).lean();
 
-    const SESSION_GAP = 30 * 60; // 30 minutes in seconds
+    const SESSION_GAP = 30 * 60;
     const sessions: typeof raw[] = [];
     let currentSession: typeof raw = [];
 
@@ -24,11 +24,10 @@ export async function GET() {
     }
     if (currentSession.length > 0) sessions.push(currentSession);
 
-    // Get the last 4 sessions
     const lastSessions = sessions.slice(-4);
     const flattened = lastSessions.flat();
 
-    const valid = (x: any) => typeof x === 'number' && !isNaN(x);
+    const valid = (x: any) => typeof x === 'number' && x > 0 && !isNaN(x);
 
     const heartRateArray = flattened.map(d => d.hr).filter(valid);
     const spo2Array = flattened.map(d => d.spo2).filter(valid);
@@ -40,5 +39,6 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch average data' }, { status: 500 });
   }
 }
+
 
 

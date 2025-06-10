@@ -14,15 +14,19 @@ export async function GET() {
 
   const userId = session.user._id;
 
-  const data = await SensorReading.find({ userId });
+  const data = await SensorReading.find({ userId }).lean();
 
-  const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
-  const stdDev = (arr: number[], mean: number) =>
-    Math.sqrt(arr.reduce((acc, val) => acc + (val - mean) ** 2, 0) / arr.length);
+  const valid = (x: any): x is number => typeof x === 'number' && x > 0 && !isNaN(x);
 
-  const hrArray = data.map(d => d.hr).filter(Boolean);
-  const spo2Array = data.map(d => d.spo2).filter(Boolean);
-  const rrArray = data.map(d => d.respiratoryRate).filter(Boolean);
+  const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+  const stdDev = (arr: number[], mean: number | null) =>
+    mean !== null && arr.length
+      ? Math.sqrt(arr.reduce((acc, val) => acc + (val - mean) ** 2, 0) / arr.length)
+      : null;
+
+  const hrArray = data.map(d => d.hr).filter(valid);
+  const spo2Array = data.map(d => d.spo2).filter(valid);
+  const rrArray = data.map(d => d.respiratoryRate).filter(valid);
 
   const hrBaseline = avg(hrArray);
   const spo2Baseline = avg(spo2Array);
@@ -37,3 +41,4 @@ export async function GET() {
     hrStd, spo2Std, rrStd
   });
 }
+
