@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, ReactNode } from 'react';
 import 'chartjs-adapter-date-fns';
 import { Line } from 'react-chartjs-2';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
@@ -513,12 +513,6 @@ export default function DashboardClient() {
             >
               {paused ? 'Resume' : 'Pause'} Updates
             </button>
-            <button
-              onClick={handleDeleteLatest}
-              className="rounded bg-yellow-600 px-4 py-1.5 text-sm font-semibold hover:bg-yellow-700"
-            >
-              Delete Latest
-            </button>
           </div>
         </div>
 
@@ -527,16 +521,20 @@ export default function DashboardClient() {
           <SummaryCard title="Avg SpO₂" value={activeSession?.avgSpO2 ?? '--'} unit="%" />
           <SummaryCard title="Avg Resp Rate" value={activeSession?.avgRR ?? '--'} unit="brpm" />
           <SummaryCard
-                title="Data Points"
-                value={
-                  activeSession
-                    ? `HR: ${activeSession.data.filter(d => d.hr != null).length}, ` +
-                      `SpO₂: ${activeSession.data.filter(d => d.spo2 != null).length}, ` +
-                      `RR: ${activeSession.data.filter(d => d.respiratoryRate != null).length}`
-                    : '--'
-                }
-                unit=""
-              />
+            title="Data Points"
+            value={
+              activeSession ? (
+                <div className="flex flex-col text-sm text-white gap-0.5">
+                  <span>HR: {activeSession.data.filter(d => d.hr != null).length}</span>
+                  <span>SpO₂: {activeSession.data.filter(d => d.spo2 != null).length}</span>
+                  <span>RR: {activeSession.data.filter(d => d.respiratoryRate != null).length}</span>
+                </div>
+              ) : (
+                '--'
+              )
+            }
+            unit=""
+          />
         </div>
 
         <div className="mt-3 space-y-2">
@@ -712,16 +710,23 @@ function createSession(data: SensorData[]): SleepSession {
 }
 
 
-function SummaryCard({ title, value, unit }: { title: string; value: number | string; unit: string }) {
+function SummaryCard({ title, value, unit }: { title: string; value: number | string | ReactNode; unit: string }) {
   return (
     <div className="flex flex-col items-center justify-center rounded-lg bg-slate-800/80 backdrop-blur p-4 shadow border border-slate-700 hover:scale-[1.01] transition">
-      <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">{title}</h3>
-      <p className="mt-1 text-2xl font-bold text-white">
-        {value}
-        {unit && <span className="ml-1 text-base text-slate-400">{unit}</span>}
-      </p>
+      <h3 className="text-base font-medium text-slate-400 uppercase tracking-wider">{title}</h3>
+      <div className="mt-1 text-center text-white text-2xl font-medium leading-tight">
+        {typeof value === 'string' || typeof value === 'number' ? (
+          <>
+            {value}
+            {unit && <span className="ml-1 text-slate-400 text-2xl">{unit}</span>}
+          </>
+        ) : (
+          value
+        )}
+      </div>
     </div>
   );
 }
+
 
 
