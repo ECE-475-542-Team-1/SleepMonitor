@@ -62,11 +62,31 @@ export async function POST(request: NextRequest) {
 
 export async function GET(req: NextRequest) {
   await connectMongo();
+
+  const apiKey = req.headers.get('x-api-key');
+  let userId: string | undefined;
+
+  if (apiKey) {
+    const device = await Device.findOne({ apiKey });
+    if (!device) {
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+    }
+    userId = device.userId.toString();
+  } else {
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.sub) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    userId = token.sub;
+  }
+
   const readings = await SensorReading
-    .find({ respiratoryRate: { $exists: true } })
+    .find({ userId, respiratoryRate: { $exists: true } })
     .sort({ timestamp: 1 })
     .lean();
+
   return NextResponse.json(readings);
 }
+
 
 

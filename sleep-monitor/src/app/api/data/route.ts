@@ -2,32 +2,27 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectMongo } from '@/app/lib/mongoose';
 import { getToken } from 'next-auth/jwt';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../lib/authOptions';
+import { resolveUserId } from '../../lib/apiHelpers';
 import SensorReading from '@/app/models/SensorReadings';
 import Device from '@/app/models/Device';
 
 export async function GET(req: NextRequest) {
   await connectMongo();
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  if (!token || !token.sub) {
+  const userId = await resolveUserId(req);
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const userId = token.sub;
-
-  const readings = await SensorReading.find({ userId })
-    .sort({ timestamp: 1 })
-    .lean();
-
+  const readings = await SensorReading.find({ userId }).sort({ timestamp: 1 }).lean();
   return NextResponse.json(readings);
 }
 
 export async function DELETE(request: NextRequest) {
   await connectMongo();
 
-  const session = await getServerSession(authOptions);
-  if (!session) {
+  const userId = await resolveUserId(request);
+  if (!userId) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -43,7 +38,7 @@ export async function DELETE(request: NextRequest) {
     const sessionEnd = sessionStart + 60 * 60 * 12;
 
     const result = await SensorReading.deleteMany({
-      userId: session.user._id,
+      userId,
       timestamp: { $gte: sessionStart, $lte: sessionEnd },
     });
 
@@ -52,7 +47,7 @@ export async function DELETE(request: NextRequest) {
     });
   }
 
-  const latest = await SensorReading.findOne({ userId: session.user._id }).sort({ timestamp: -1 });
+  const latest = await SensorReading.findOne({ userId }).sort({ timestamp: -1 });
 
   if (!latest) {
     return NextResponse.json({ error: 'No data to delete' }, { status: 404 });

@@ -259,7 +259,7 @@ export default function DashboardClient() {
         spanGaps: true,
         pointRadius: 0,
         borderWidth: 2,
-        tension: 0.7,
+        tension: 0.8,
       },
       {
         label: 'SpO₂ (%)',
@@ -268,7 +268,7 @@ export default function DashboardClient() {
         spanGaps: true,
         pointRadius: 0,
         borderWidth: 2,
-        tension: 0.7,
+        tension: 0.8,
       },
     ],
   };
@@ -283,7 +283,7 @@ export default function DashboardClient() {
         spanGaps: true,
         pointRadius: 0,
         borderWidth: 2,
-        tension: 0.7,
+        tension: 0.8,
       },
     ],
   };
@@ -295,6 +295,11 @@ export default function DashboardClient() {
     animation: {
       duration: 700,
       easing: 'easeInOutQuart',
+    },
+      interaction: {
+        mode: 'nearest',    
+        intersect: false,   
+        axis: 'x', 
     },
     plugins: {
       legend: {
@@ -368,26 +373,6 @@ export default function DashboardClient() {
     rem: 2,
     deep: 3,
   };
-
-  // const stageData: ChartData<'line', { x: Date; y: number }[], Date> = {
-  //   datasets: [
-  //     {
-  //       type: 'line',
-  //       label: 'Inferred Sleep Stage',
-  //       data: sortedData.map(d => ({
-  //         x: new Date(d.timestamp * 1000),
-  //         y: sleepStageMap[inferSleepStage(d.hr, d.respiratoryRate, baselineHR, baselineRR)],
-  //       })),
-  //       backgroundColor: sortedData.map(d =>
-  //         getStageColor(inferSleepStage(d.hr, d.respiratoryRate, baselineHR, baselineRR))
-  //       ),
-  //       borderWidth: 0,
-  //       pointRadius: 5,
-  //       showLine: false,
-  //       fill: false,
-  //     } satisfies ChartDataset<'line', { x: Date; y: number }[]>,
-  //   ],
-  // };
 
   const spo2Baseline = userStats?.spo2Baseline ?? 0;
 

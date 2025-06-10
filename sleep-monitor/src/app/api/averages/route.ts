@@ -1,11 +1,21 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { connectMongo } from '@/app/lib/mongoose';
 import SensorData from '@/app/models/SensorReadings';
+import { getToken } from 'next-auth/jwt';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await connectMongo();
-    const raw = await SensorData.find({}).sort({ timestamp: 1 }).lean();
+
+    const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    if (!token || !token.sub) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = token.sub;
+
+    // Fetch only this user's sensor data
+    const raw = await SensorData.find({ userId }).sort({ timestamp: 1 }).lean();
 
     const SESSION_GAP = 30 * 60;
     const sessions: typeof raw[] = [];
@@ -39,6 +49,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch average data' }, { status: 500 });
   }
 }
+
 
 
 

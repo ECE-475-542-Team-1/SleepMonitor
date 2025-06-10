@@ -60,7 +60,7 @@ export default function Sidebar() {
       <button
         onClick={() =>
           signOut({
-            callbackUrl: 'http://sleepmonitoring.org:32000',
+            callbackUrl: 'http://sleepmonitoring.org:32000/',
           })
         }
         className="mt-4 w-full rounded-md bg-cyan-200 py-2 text-center text-sm font-semibold text-gray-900 hover:bg-cyan-400"
