@@ -23,7 +23,7 @@ You are a sleep health assistant helping users understand the quality of their s
 Here is the user's recent average sleep data:
 - Heart Rate readings: [${heartRateArray.join(', ')}] (average: ${avgHR ?? 'N/A'} bpm)
 - SpO₂ readings: [${spo2Array.join(', ')}] (average: ${avgSpO2 ?? 'N/A'}%)
-- Respiratory Rate readings: [${rrArray.join(', ')}] (average: ${avgRR ?? 'N/A'}%)
+- Respiratory Rate readings: [${rrArray.join(', ')}] (average: ${avgRR ?? 'N/A'} breaths per minute)
 
 Instructions:
 1. If values suggest **possible concern** (e.g., HR > 75 bpm, SpO₂ < 95%, RR < 4), provide:

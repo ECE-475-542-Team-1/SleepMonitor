@@ -36,11 +36,11 @@ export default function SleepInsightsClient() {
   const logicalInsights = [
     avgHR > 80
       ? 'Your average heart rate is slightly elevated during sleep, which may suggest restlessness, stress, or lack of deep sleep.'
-      : 'Your heart rate is within a healthy resting range — a good indicator of restful sleep.',
+      : 'Your heart rate is within a healthy resting range, which is a good indicator of restful sleep.',
     avgSpO2 < 95
       ? 'Your average SpO₂ is below the optimal level, which may indicate potential breathing disruptions such as mild apnea.'
-      : 'Your SpO₂ levels are consistently strong — excellent oxygenation during sleep.',
-    avgRR < 7
+      : 'Your SpO₂ levels are consistently strong, indicating excellent oxygenation during sleep.',
+    avgRR < 10
       ? 'Your breathing rates slow significantly during the night, which could be a sign of sleep apnea or other breathing condition.'
       : 'Your breathing rate seems consistent and within normal range.'
   ];
@@ -53,7 +53,7 @@ export default function SleepInsightsClient() {
       const response = await fetch('/api/sleepAnalysis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ heartRateArray, spo2Array }),
+        body: JSON.stringify({ heartRateArray, spo2Array, rrArray }),
       });
       const json = await response.json();
       setInsights(json.insights || 'No AI insights available.');
@@ -137,7 +137,7 @@ export default function SleepInsightsClient() {
           }
         />
 
-        {(avgHR > 75 || avgSpO2 < 95) && (
+        {(avgHR > 80 || avgSpO2 < 92) && (
           <InsightCard
             title="Suggestions"
             icon={<AlertTriangle className="text-yellow-400" size={20} />}
