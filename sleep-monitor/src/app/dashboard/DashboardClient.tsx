@@ -280,6 +280,7 @@ export default function DashboardClient() {
         label: 'Respiratory Rate (brpm)',
         data: sortedData.map(d => ({ x: new Date(d.timestamp * 1000), y: d.respiratoryRate ?? null })),
         borderColor: '#10b981',
+        spanGaps: true,
         pointRadius: 0,
         borderWidth: 2,
         tension: 0.7,
@@ -525,7 +526,17 @@ export default function DashboardClient() {
           <SummaryCard title="Avg HR" value={activeSession?.avgHR ?? '--'} unit="bpm" />
           <SummaryCard title="Avg SpO₂" value={activeSession?.avgSpO2 ?? '--'} unit="%" />
           <SummaryCard title="Avg Resp Rate" value={activeSession?.avgRR ?? '--'} unit="brpm" />
-          <SummaryCard title="Data Points" value={activeSession?.data.length ?? '--'} unit="" />
+          <SummaryCard
+                title="Data Points"
+                value={
+                  activeSession
+                    ? `HR: ${activeSession.data.filter(d => d.hr != null).length}, ` +
+                      `SpO₂: ${activeSession.data.filter(d => d.spo2 != null).length}, ` +
+                      `RR: ${activeSession.data.filter(d => d.respiratoryRate != null).length}`
+                    : '--'
+                }
+                unit=""
+              />
         </div>
 
         <div className="mt-3 space-y-2">
