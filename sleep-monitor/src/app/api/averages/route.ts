@@ -5,15 +5,40 @@ import SensorData from '@/app/models/SensorReadings';
 export async function GET() {
   try {
     await connectMongo();
-    const data = await SensorData.find({}).lean();
+    const raw = await SensorData.find({}).sort({ timestamp: 1 }).lean();
 
-    const heartRateArray = data.map(d => d.hr).filter(hr => typeof hr === 'number');
-    const spo2Array = data.map(d => d.spo2).filter(s => typeof s === 'number');
+    const SESSION_GAP = 30 * 60; // 30 minutes in seconds
+    const sessions: typeof raw[] = [];
+    let currentSession: typeof raw = [];
 
-    return NextResponse.json({ heartRateArray, spo2Array });
+    for (let i = 0; i < raw.length; i++) {
+      const current = raw[i];
+      const prev = raw[i - 1];
+
+      if (i === 0 || (current.timestamp - prev.timestamp) <= SESSION_GAP) {
+        currentSession.push(current);
+      } else {
+        if (currentSession.length > 0) sessions.push(currentSession);
+        currentSession = [current];
+      }
+    }
+    if (currentSession.length > 0) sessions.push(currentSession);
+
+    // Get the last 4 sessions
+    const lastSessions = sessions.slice(-4);
+    const flattened = lastSessions.flat();
+
+    const valid = (x: any) => typeof x === 'number' && !isNaN(x);
+
+    const heartRateArray = flattened.map(d => d.hr).filter(valid);
+    const spo2Array = flattened.map(d => d.spo2).filter(valid);
+    const rrArray = flattened.map(d => d.respiratoryRate).filter(valid);
+
+    return NextResponse.json({ heartRateArray, spo2Array, rrArray });
   } catch (error) {
     console.error('[API ERROR] /api/averages:', error);
     return NextResponse.json({ error: 'Failed to fetch average data' }, { status: 500 });
   }
 }
+
 

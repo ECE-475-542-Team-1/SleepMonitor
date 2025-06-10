@@ -52,18 +52,61 @@ interface SleepSession {
   avgSpO2: number;
 }
 
-function inferSleepStage(
-  hr: number,
-  rr: number,
-  baselineHR: number,
-  baselineRR: number
-): 'awake' | 'light' | 'deep' | 'rem' {
-  const hrDrop = (baselineHR - hr) / baselineHR;
-  const rrDrop = (baselineRR - rr) / baselineRR;
+interface UserStats {
+  hrBaseline: number;
+  rrBaseline: number;
+  spo2Baseline: number;
+  hrStd: number;
+  rrStd: number;
+  spo2Std: number;
+}
 
-  if (hrDrop < 0.05 || rrDrop < 0.05) return 'awake';
-  if (hrDrop > 0.2 && rrDrop > 0.25) return 'deep';
-  if (hrDrop > 0.1 && rrDrop < 0.1) return 'rem';
+
+// function inferSleepStage(
+//   hr: number,
+//   rr: number,
+//   baselineHR: number,
+//   baselineRR: number
+// ): 'awake' | 'light' | 'deep' | 'rem' {
+//   const hrDrop = (baselineHR - hr) / baselineHR;
+//   const rrDrop = (baselineRR - rr) / baselineRR;
+
+//   if (hrDrop < 0.05 || rrDrop < 0.05) return 'awake';
+//   if (hrDrop > 0.2 && rrDrop > 0.25) return 'deep';
+//   if (hrDrop > 0.1 && rrDrop < 0.1) return 'rem';
+//   return 'light';
+// }
+
+function inferSleepStage(
+    hr: number, rr: number, spo2: number,
+  hrBaseline: number, rrBaseline: number, spo2Baseline: number,
+  hrStd: number, rrStd: number, spo2Std: number
+): 'awake' | 'light' | 'deep' | 'rem' {
+
+  if (
+    [hr, rr, spo2, hrBaseline, rrBaseline, spo2Baseline, hrStd, rrStd, spo2Std].some(
+      v => v === undefined || v === null || isNaN(v) || v === 0
+    )
+  ) {
+    return 'awake';
+  }
+  
+  const hrZ = (hr - hrBaseline) / hrStd;
+  const rrZ = (rr - rrBaseline) / rrStd;
+  const spo2Z = (spo2 - spo2Baseline) / spo2Std;
+
+  if (Math.abs(hrZ) < 0.3 && Math.abs(rrZ) < 0.3 && spo2Z > -0.3) {
+    return 'awake';
+  }
+
+  if (hrZ < -0.5 && rrZ < -0.5 && spo2Z > -0.2) {
+    return 'deep';
+  }
+
+  if (hrZ < -0.2 && rrZ >= -0.5 && spo2Z <= -0.3) {
+    return 'rem';
+  }
+
   return 'light';
 }
 
@@ -89,6 +132,9 @@ export default function DashboardClient() {
   const [filter, setFilter] = useState<'all' | '24h' | '7d' | '30d'>('all');
   const [chartTab, setChartTab] = useState('hrspo2');
   const sessionScrollRef = useRef<HTMLDivElement>(null);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+
+
   const scrollSessions = (direction: 'left' | 'right') => {
     if (!sessionScrollRef.current) return;
     sessionScrollRef.current.scrollBy({
@@ -119,7 +165,12 @@ export default function DashboardClient() {
     return () => clearInterval(interval);
   }, [paused]);
 
-
+  useEffect(() => {
+    fetch('/api/user-stats')
+      .then(res => res.json())
+      .then(setUserStats)
+      .catch(console.error);
+  }, []);
 
   const handleDeleteLatest = async () => {
     const confirmed = confirm('Delete the most recent reading?');
@@ -153,11 +204,15 @@ export default function DashboardClient() {
 
   const sessions = groupSleepSessions(filteredData);
   const activeSession = sessions[sessionIndex] ?? null;
+  const [hasInitializedSession, setHasInitializedSession] = useState(false);
+
   useEffect(() => {
-    if (sessions.length > 0 && sessionIndex === 0) {
+    if (!hasInitializedSession && sessions.length > 0) {
       setSessionIndex(sessions.length - 1);
+      setHasInitializedSession(true);
     }
-  }, [sessions]);
+  }, [sessions, hasInitializedSession]);
+
 
   const groupedByTimestamp: Record<number, SensorData[]> = {};
   for (const d of activeSession?.data ?? []) {
@@ -307,25 +362,73 @@ export default function DashboardClient() {
     deep: 3,
   };
 
-  const stageData: ChartData<'line', { x: Date; y: number }[], Date> = {
-    datasets: [
-      {
-        type: 'line',
-        label: 'Inferred Sleep Stage',
-        data: sortedData.map(d => ({
-          x: new Date(d.timestamp * 1000),
-          y: sleepStageMap[inferSleepStage(d.hr, d.respiratoryRate, baselineHR, baselineRR)],
-        })),
-        backgroundColor: sortedData.map(d =>
-          getStageColor(inferSleepStage(d.hr, d.respiratoryRate, baselineHR, baselineRR))
-        ),
-        borderWidth: 0,
-        pointRadius: 5,
-        showLine: false,
-        fill: false,
-      } satisfies ChartDataset<'line', { x: Date; y: number }[]>,
-    ],
-  };
+  // const stageData: ChartData<'line', { x: Date; y: number }[], Date> = {
+  //   datasets: [
+  //     {
+  //       type: 'line',
+  //       label: 'Inferred Sleep Stage',
+  //       data: sortedData.map(d => ({
+  //         x: new Date(d.timestamp * 1000),
+  //         y: sleepStageMap[inferSleepStage(d.hr, d.respiratoryRate, baselineHR, baselineRR)],
+  //       })),
+  //       backgroundColor: sortedData.map(d =>
+  //         getStageColor(inferSleepStage(d.hr, d.respiratoryRate, baselineHR, baselineRR))
+  //       ),
+  //       borderWidth: 0,
+  //       pointRadius: 5,
+  //       showLine: false,
+  //       fill: false,
+  //     } satisfies ChartDataset<'line', { x: Date; y: number }[]>,
+  //   ],
+  // };
+
+  const spo2Baseline = userStats?.spo2Baseline ?? 0;
+
+  const stageData: ChartData<'line', { x: Date; y: number }[], Date> | null = userStats
+  ? {
+      datasets: [
+        {
+          type: 'line',
+          label: 'Inferred Sleep Stage',
+          data: sortedData.map(d => {
+            const stage = inferSleepStage(
+              d.hr,
+              d.respiratoryRate,
+              d.spo2 ?? spo2Baseline, // fallback if d.spo2 is missing
+              userStats.hrBaseline,
+              userStats.rrBaseline,
+              userStats.spo2Baseline,
+              userStats.hrStd,
+              userStats.rrStd,
+              userStats.spo2Std
+            );
+            return {
+              x: new Date(d.timestamp * 1000),
+              y: sleepStageMap[stage],
+            };
+          }),
+          backgroundColor: sortedData.map(d => {
+            const stage = inferSleepStage(
+              d.hr,
+              d.respiratoryRate,
+              d.spo2 ?? spo2Baseline,
+              userStats.hrBaseline,
+              userStats.rrBaseline,
+              userStats.spo2Baseline,
+              userStats.hrStd,
+              userStats.rrStd,
+              userStats.spo2Std
+            );
+            return getStageColor(stage);
+          }),
+          borderWidth: 0,
+          pointRadius: 5,
+          showLine: false,
+          fill: false,
+        } satisfies ChartDataset<'line', { x: Date; y: number }[]>,
+      ],
+    }
+  : null;
 
   const stageChartOptions: ChartOptions<'line'> = {
     ...chartOptions,

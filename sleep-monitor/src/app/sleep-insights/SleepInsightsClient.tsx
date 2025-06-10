@@ -8,6 +8,7 @@ export default function SleepInsightsClient() {
   const [loading, setLoading] = useState(false);
   const [heartRateArray, setHeartRateArray] = useState<number[]>([]);
   const [spo2Array, setSpo2Array] = useState<number[]>([]);
+  const [rrArray, setRRArray] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchAverages = async () => {
@@ -16,6 +17,7 @@ export default function SleepInsightsClient() {
         const data = await res.json();
         setHeartRateArray(data.heartRateArray || []);
         setSpo2Array(data.spo2Array || []);
+        setRRArray(data.rrArray || [])
       } catch (err) {
         console.error('Failed to fetch average data:', err);
       }
@@ -29,14 +31,18 @@ export default function SleepInsightsClient() {
 
   const avgHR = avg(heartRateArray);
   const avgSpO2 = avg(spo2Array);
+  const avgRR = avg(rrArray);
 
   const logicalInsights = [
-    avgHR > 75
+    avgHR > 80
       ? 'Your average heart rate is slightly elevated during sleep, which may suggest restlessness, stress, or lack of deep sleep.'
       : 'Your heart rate is within a healthy resting range — a good indicator of restful sleep.',
     avgSpO2 < 95
       ? 'Your average SpO₂ is below the optimal level, which may indicate potential breathing disruptions such as mild apnea.'
       : 'Your SpO₂ levels are consistently strong — excellent oxygenation during sleep.',
+    avgRR < 7
+      ? 'Your breathing rates slow significantly during the night, which could be a sign of sleep apnea or other breathing condition.'
+      : 'Your breathing rate seems consistent and within normal range.'
   ];
 
   const handleAnalyze = async () => {
@@ -65,13 +71,14 @@ export default function SleepInsightsClient() {
         <header className="space-y-1">
           <h1 className="text-4xl font-bold tracking-tight text-white">Sleep Insights</h1>
           <p className="text-slate-400">
-            Personalized feedback based on your heart rate and SpO₂ data.
+            Personalized feedback based on your heart rate, SpO₂, and Respiration data.
           </p>
         </header>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <MetricCard label="Avg HR" value={avgHR} unit="bpm" />
           <MetricCard label="Avg SpO₂" value={avgSpO2} unit="%" />
+          <MetricCard label="Avg RR" value={avgRR} unit="/min" />
         </div>
 
         <InsightCard

@@ -4,7 +4,7 @@ import OpenAI from 'openai';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { heartRateArray, spo2Array, motionArray } = body;
+    const { heartRateArray, spo2Array, rrArray } = body;
 
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -15,6 +15,7 @@ export async function POST(request: Request) {
 
     const avgHR = avg(heartRateArray);
     const avgSpO2 = avg(spo2Array);
+    const avgRR = avg(rrArray);
 
     const prompt = `
 You are a sleep health assistant helping users understand the quality of their sleep based on sensor data.
@@ -22,9 +23,10 @@ You are a sleep health assistant helping users understand the quality of their s
 Here is the user's recent average sleep data:
 - Heart Rate readings: [${heartRateArray.join(', ')}] (average: ${avgHR ?? 'N/A'} bpm)
 - SpO₂ readings: [${spo2Array.join(', ')}] (average: ${avgSpO2 ?? 'N/A'}%)
+- Respiratory Rate readings: [${rrArray.join(', ')}] (average: ${avgRR ?? 'N/A'}%)
 
 Instructions:
-1. If values suggest **possible concern** (e.g., HR > 75 bpm, SpO₂ < 95%), provide:
+1. If values suggest **possible concern** (e.g., HR > 75 bpm, SpO₂ < 95%, RR < 4), provide:
    - 3–4 short sentences summarizing the issue in plain language
    - 3–5 **concise, evidence-based suggestions** for improvement (bulleted)
 2. If all values are **within healthy range**, respond with:
