@@ -19,10 +19,7 @@ spec:
             - containerPort: 3000
           env:
             - name: NEXTAUTH_URL
-              valueFrom:
-                secretKeyRef:
-                  name: sleep-monitor-secrets
-                  key: NEXTAUTH_URL
+              value: "http://sleepmonitoring.org:32000"
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
@@ -43,6 +40,13 @@ spec:
                 secretKeyRef:
                   name: sleep-monitor-secrets
                   key: ESP32_API_KEY
+            - name: HTTP_PROXY
+              value: "http://172.31.35.56:8888"
+            - name: HTTPS_PROXY
+              value: "http://172.31.35.56:8888"
+            - name: NO_PROXY
+              value: "localhost,127.0.0.1,.svc,.cluster.local"
+
 
 
 
