@@ -2,7 +2,8 @@
 FROM node:18-alpine
 
 # Install CA certificates for HTTPS support
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates \
+    RUN apk add --no-cache curl
 
 # Set working directory
 WORKDIR /app
