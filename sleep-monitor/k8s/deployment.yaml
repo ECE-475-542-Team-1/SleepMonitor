@@ -21,7 +21,7 @@ spec:
             - containerPort: 3000
           env:
             - name: NEXTAUTH_URL
-              value: "http://sleepmonitoring.org"
+              value: "https://sleepmonitoring.org"
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
@@ -47,16 +47,26 @@ spec:
           image: bach2690/sleep-monitor-nginx:latest
           ports:
             - containerPort: 80
+              hostPort: 80
             - containerPort: 443
+              hostPort: 443
           volumeMounts:
+            - name: certs
+              mountPath: /etc/letsencrypt/live/sleepmonitoring.org
+              readOnly: true
             - name: certbot-webroot
               mountPath: /var/www/certbot
 
       volumes:
+        - name: certs
+          hostPath:
+            path: /etc/letsencrypt/live/sleepmonitoring.org
+            type: Directory
         - name: certbot-webroot
           hostPath:
             path: /var/www/certbot
             type: Directory
+
 
 
 # apiVersion: apps/v1
