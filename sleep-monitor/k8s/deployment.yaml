@@ -12,10 +12,6 @@ spec:
       labels:
         app: sleep-monitor
     spec:
-#      volumes:
-#        - name: cert-volume
-#          secret:
-#            secretName: sleep-monitor-tls
       containers:
         - name: sleep-monitor
           image: bach2690/sleep-monitor:latest
