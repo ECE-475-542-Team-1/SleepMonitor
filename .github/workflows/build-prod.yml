@@ -28,13 +28,21 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Docker Image
+      - name: Build and Push Next.js Docker Image
         if: contains(steps.commit-message.outputs.message, '[deploy]')
         run: |
           docker build \
             -t bach2690/sleep-monitor:${{ github.sha }} \
             -f sleep-monitor/Dockerfile ./sleep-monitor
           docker push bach2690/sleep-monitor:${{ github.sha }}
+
+      - name: Build and Push Nginx Docker Image
+        if: contains(steps.commit-message.outputs.message, '[deploy]')
+        run: |
+          docker build \
+            -t bach2690/sleep-monitor-nginx:${{ github.sha }} \
+            -f sleep-monitor/nginx/Dockerfile ./sleep-monitor/nginx
+          docker push bach2690/sleep-monitor-nginx:${{ github.sha }}
 
       - name: Set up Kubeconfig
         if: contains(steps.commit-message.outputs.message, '[deploy]')
@@ -49,9 +57,9 @@ jobs:
           kubectl --insecure-skip-tls-verify=true --kubeconfig=$HOME/kubeconfig create secret generic sleep-monitor-secrets \
             --from-literal=MONGO_URI="${{ secrets.MONGO_URI }}" \
             --from-literal=NEXTAUTH_SECRET="${{ secrets.NEXTAUTH_SECRET }}" \
-            --from-literal=NEXTAUTH_URL="http://sleepmonitoring.org:32000" \
+            --from-literal=NEXTAUTH_URL="https://sleepmonitoring.org" \
             --from-literal=OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" \
-            --from-literal=ESP32_API_KEY="${{ secrets.ESP32_API_KEY}}"
+            --from-literal=ESP32_API_KEY="${{ secrets.ESP32_API_KEY }}"
 
       - name: Update Kubernetes Deployment with New Image
         if: contains(steps.commit-message.outputs.message, '[deploy]')
@@ -60,4 +68,5 @@ jobs:
             sleep-monitor=bach2690/sleep-monitor:${{ github.sha }} \
             nginx-proxy=bach2690/sleep-monitor-nginx:${{ github.sha }} \
             -n default
+
 
