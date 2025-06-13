@@ -44,12 +44,12 @@ export default async function LandingPage() {
           highlight heart‑rate variability, SpO2 drops, and respiratory rate.
         </p>
 
-        <Link
+        {/* <Link
           href="/signup"
           className="mt-8 rounded bg-sky-600 px-6 py-3 text-base font-semibold text-white shadow hover:bg-sky-700"
         >
           Try It Free
-        </Link>
+        </Link> */}
       </section>
 
       <section className="mx-auto mt-24 mb-4 grid w-full max-w-6xl gap-10 px-6 md:grid-cols-3">
