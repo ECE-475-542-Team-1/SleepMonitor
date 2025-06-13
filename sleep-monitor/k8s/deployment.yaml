@@ -12,14 +12,18 @@ spec:
       labels:
         app: sleep-monitor
     spec:
+      volumes:
+        - name: cert-volume
+          secret:
+            secretName: sleep-monitor-tls
       containers:
-        - name: sleep-monitor
+        - name: sleep-monitor-app
           image: bach2690/sleep-monitor:latest
           ports:
             - containerPort: 3000
           env:
             - name: NEXTAUTH_URL
-              value: "http://sleepmonitoring.org:32000"
+              value: "https://sleepmonitoring.org"
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
@@ -40,12 +44,16 @@ spec:
                 secretKeyRef:
                   name: sleep-monitor-secrets
                   key: ESP32_API_KEY
-            - name: HTTP_PROXY
-              value: "http://172.31.35.56:8888"
-            - name: HTTPS_PROXY
-              value: "http://172.31.35.56:8888"
-            - name: NO_PROXY
-              value: "localhost,127.0.0.1,.svc,.cluster.local"
+
+        - name: nginx-proxy
+          image: bach2690/sleep-monitor-nginx:latest
+          ports:
+            - containerPort: 443
+          volumeMounts:
+            - name: cert-volume
+              mountPath: "/etc/nginx/certs"
+              readOnly: true
+
 
 
 
