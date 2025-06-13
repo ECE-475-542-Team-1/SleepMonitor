@@ -17,7 +17,7 @@ spec:
           secret:
             secretName: sleep-monitor-tls
       containers:
-        - name: sleep-monitor-app
+        - name: sleep-monitor
           image: bach2690/sleep-monitor:latest
           ports:
             - containerPort: 3000
