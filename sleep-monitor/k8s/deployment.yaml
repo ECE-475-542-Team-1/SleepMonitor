@@ -50,12 +50,15 @@ spec:
               hostPort: 80
             - containerPort: 443
               hostPort: 443
+          securityContext:
+            privileged: true
           volumeMounts:
             - name: certs
-              mountPath: /etc/letsencrypt/live
+              mountPath: /etc/letsencrypt/live/sleepmonitoring.org
               readOnly: true
             - name: certbot-webroot
               mountPath: /var/www/certbot
+
 
       volumes:
         - name: certs
