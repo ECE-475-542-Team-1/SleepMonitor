@@ -7,15 +7,10 @@ spec:
     app: sleep-monitor
   type: NodePort
   ports:
-    - name: http
+    - name: app
       protocol: TCP
-      port: 80
-      targetPort: 80
-      nodePort: 32000   # External access via EC2_IP:32000
-    - name: https
-      protocol: TCP
-      port: 443
-      targetPort: 443
-      nodePort: 32443   # External access via EC2_IP:32443
+      port: 3000
+      targetPort: 3000
+      nodePort: 32000
 
 

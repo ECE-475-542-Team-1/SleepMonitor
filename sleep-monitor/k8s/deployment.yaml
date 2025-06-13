@@ -9,10 +9,10 @@ spec:
       app: sleep-monitor
   template:
     metadata:
-      labels: 
+      labels:
         app: sleep-monitor
     spec:
-      volumes:
+#      volumes:
 #        - name: cert-volume
 #          secret:
 #            secretName: sleep-monitor-tls
@@ -23,7 +23,7 @@ spec:
             - containerPort: 3000
           env:
             - name: NEXTAUTH_URL
-              value: "https://sleepmonitoring.org"
+              value: "http://sleepmonitoring.org:32000"
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
@@ -48,11 +48,10 @@ spec:
         - name: nginx-proxy
           image: bach2690/sleep-monitor-nginx:latest
           ports:
+            - containerPort: 80
+              hostPort: 80
             - containerPort: 443
-#          volumeMounts:
-#            - name: cert-volume
-#              mountPath: "/etc/nginx/certs"
-#              readOnly: true
+              hostPort: 443
 
 
 
