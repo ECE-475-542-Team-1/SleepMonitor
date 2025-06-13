@@ -52,7 +52,7 @@ spec:
               hostPort: 443
           volumeMounts:
             - name: certs
-              mountPath: /etc/letsencrypt/live/sleepmonitoring.org
+              mountPath: /etc/letsencrypt/live
               readOnly: true
             - name: certbot-webroot
               mountPath: /var/www/certbot
@@ -60,12 +60,13 @@ spec:
       volumes:
         - name: certs
           hostPath:
-            path: /etc/letsencrypt/live/sleepmonitoring.org
+            path: /etc/letsencrypt/archive/sleepmonitoring.org
             type: Directory
         - name: certbot-webroot
           hostPath:
             path: /var/www/certbot
             type: Directory
+
 
 
 
