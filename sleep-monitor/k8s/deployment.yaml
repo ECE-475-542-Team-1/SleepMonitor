@@ -14,6 +14,7 @@ spec:
       labels:
         app: sleep-monitor
     spec:
+      hostNetwork: true
       containers:
         - name: sleep-monitor
           image: bach2690/sleep-monitor:latest
@@ -47,9 +48,7 @@ spec:
           image: bach2690/sleep-monitor-nginx:latest
           ports:
             - containerPort: 80
-              hostPort: 80
             - containerPort: 443
-              hostPort: 443
           securityContext:
             privileged: true
           volumeMounts:
