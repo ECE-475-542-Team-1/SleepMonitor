@@ -56,5 +56,8 @@ jobs:
       - name: Update Kubernetes Deployment with New Image
         if: contains(steps.commit-message.outputs.message, '[deploy]')
         run: |
-          kubectl --insecure-skip-tls-verify=true --kubeconfig=$HOME/kubeconfig set image deployment/sleep-monitor-deployment sleep-monitor=bach2690/sleep-monitor:${{ github.sha }} -n default
+          kubectl --insecure-skip-tls-verify=true --kubeconfig=$HOME/kubeconfig set image deployment/sleep-monitor-deployment \
+            sleep-monitor=bach2690/sleep-monitor:${{ github.sha }} \
+            nginx-proxy=bach2690/sleep-monitor-nginx:${{ github.sha }} \
+            -n default
 
