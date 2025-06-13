@@ -14,7 +14,6 @@ spec:
       labels:
         app: sleep-monitor
     spec:
-      hostNetwork: true
       containers:
         - name: sleep-monitor
           image: bach2690/sleep-monitor:latest
