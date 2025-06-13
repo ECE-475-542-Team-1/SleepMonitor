@@ -54,7 +54,7 @@ spec:
             privileged: true
           volumeMounts:
             - name: certs
-              mountPath: /etc/letsencrypt/live/sleepmonitoring.org
+              mountPath: /etc/letsencrypt/archive/sleepmonitoring.org
               readOnly: true
             - name: certbot-webroot
               mountPath: /var/www/certbot
