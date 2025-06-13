@@ -9,7 +9,7 @@ spec:
       app: sleep-monitor
   template:
     metadata:
-      labels:
+      labels: 
         app: sleep-monitor
     spec:
       volumes:
