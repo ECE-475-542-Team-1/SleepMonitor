@@ -4,6 +4,8 @@ metadata:
   name: sleep-monitor-deployment
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: sleep-monitor
@@ -12,6 +14,7 @@ spec:
       labels:
         app: sleep-monitor
     spec:
+      hostNetwork: true
       containers:
         - name: sleep-monitor
           image: bach2690/sleep-monitor:latest
