@@ -14,7 +14,6 @@ spec:
       labels:
         app: sleep-monitor
     spec:
-      hostNetwork: true
       containers:
         - name: sleep-monitor
           image: bach2690/sleep-monitor:latest
@@ -22,7 +21,7 @@ spec:
             - containerPort: 3000
           env:
             - name: NEXTAUTH_URL
-              value: "http://sleepmonitoring.org:32000"
+              value: "http://sleepmonitoring.org"
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
